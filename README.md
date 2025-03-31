@@ -33,8 +33,13 @@ A Python utility for capturing screens from specific monitors and saving the ima
      ```
 
 4. **Install dependencies**:
+   - *given a pyproject.toml file, install dependencies using uv pip*
    ```bash
    uv pip install .
+   ```
+   - *otherwise, if project has `requirements.txt`, install dependencies like this*
+   ```bash
+   uv pip install -r requirements.txt
    ```
 
 ## Usage
