@@ -57,7 +57,7 @@ A Python utility for capturing screens from specific monitors and saving the ima
 
 3. **Run the capture utility**:
    ```bash
-   python main.py
+   python generate_slides.py
    ```
    The script will capture screenshots from the specified monitor.
 
