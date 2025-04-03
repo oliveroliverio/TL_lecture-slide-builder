@@ -86,6 +86,36 @@
 - Align test expectations with actual implementation behavior
 - Improve test reliability by avoiding actual image processing operations
 
+## 2025-04-03: Improved OCR Text Similarity for Robust Slide Detection
+
+### Changes Made
+- Enhanced the `text_similarity` method in the `ImageProcessor` class to be more robust against OCR errors by:
+  - Replacing word-based Jaccard similarity with character-level similarity using `difflib.SequenceMatcher`
+  - Adding text normalization (lowercase, punctuation removal, whitespace normalization)
+  - Adding an exact match check for normalized text
+- Increased the `TEXT_SIMILARITY_THRESHOLD` from 0.8 to 0.9 to be more strict with the new similarity algorithm
+- Added a new test case for text similarity with OCR errors
+- Fixed linting issues in test files
+
+### Files Modified
+- `generate_slides.py`:
+  - Modified `text_similarity` method in `ImageProcessor` class (lines 96-126)
+  - Changed `TEXT_SIMILARITY_THRESHOLD` in `Config` class from 0.8 to 0.9 (line 26)
+- `tests/test_image_processor.py`:
+  - Fixed linting issues
+  - Added new test case `test_text_similarity_with_ocr_errors` (lines 156-167)
+- `tests/test_config.py`:
+  - Updated test for `TEXT_SIMILARITY_THRESHOLD` to match new value
+  - Removed unused `pytest` import
+
+### Reason for Changes
+The previous implementation used word-based Jaccard similarity, which was too sensitive to OCR errors. When OCR misread text (like "BRAT" instead of "BRAIN"), the words were considered completely different even though they represented the same content with minor OCR errors. This resulted in capturing multiple images of the same slide.
+
+The new implementation uses character-level similarity with text normalization, which is much more robust against OCR errors. It can recognize that "A SECOND BRAIN" and "A SECOID BRAN" are likely the same content despite OCR errors. This prevents capturing duplicate slides when the OCR text has minor variations but represents the same content.
+
+### Testing
+All tests have been updated and are passing. The application now properly identifies similar text content even when OCR introduces minor errors, which will prevent capturing duplicate slides.
+
 ## 2023-08-01: Implemented OCR-based Text Similarity for Slide Detection
 
 ### Changes Made

@@ -23,7 +23,7 @@ class Config:
     CAPTURE_INTERVAL = 2  # seconds between checks
     SSIM_THRESHOLD = 0.95  # lower = more sensitive to change
     FACE_AREA_THRESHOLD = 0.25  # proportion of screen covered by faces
-    TEXT_SIMILARITY_THRESHOLD = 0.8  # text similarity threshold (0-1)
+    TEXT_SIMILARITY_THRESHOLD = 0.9  # text similarity threshold (0-1)
     OUTPUT_DIR = "captured_slides"
     MAX_TITLE_LENGTH = 50  # maximum length of generated title
     OCR_QUEUE_SIZE = 100  # maximum number of images to queue for OCR processing
@@ -109,17 +109,32 @@ class ImageProcessor:
             if not text1 or not text2:
                 return 0.0
             
-            # Calculate Jaccard similarity (intersection over union of words)
-            words1 = set(text1.lower().split())
-            words2 = set(text2.lower().split())
+            # Normalize text: convert to lowercase, remove punctuation and extra whitespace
+            def normalize_text(text):
+                # Convert to lowercase
+                text = text.lower()
+                # Remove punctuation and special characters
+                text = re.sub(r'[^\w\s]', '', text)
+                # Replace multiple spaces with a single space
+                text = re.sub(r'\s+', ' ', text)
+                # Remove leading/trailing whitespace
+                return text.strip()
             
-            intersection = len(words1.intersection(words2))
-            union = len(words1.union(words2))
+            norm_text1 = normalize_text(text1)
+            norm_text2 = normalize_text(text2)
             
-            if union == 0:  # Safeguard against division by zero
+            # If normalized texts are identical, return perfect similarity
+            if norm_text1 == norm_text2:
                 return 1.0
-                
-            return intersection / union
+            
+            # Calculate character-level similarity using difflib's SequenceMatcher
+            # This is more robust against OCR errors than word-based Jaccard similarity
+            import difflib
+            similarity = difflib.SequenceMatcher(None, norm_text1, norm_text2).ratio()
+            
+            # Apply a more aggressive threshold for considering texts similar
+            # This helps with OCR errors that might slightly change text but not meaning
+            return similarity
         except Exception as e:
             print(f"❌ Text similarity error: {e}")
             return 0

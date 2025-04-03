@@ -1,5 +1,4 @@
 import os
-import pytest
 import shutil
 from generate_slides import Config
 
@@ -10,7 +9,7 @@ def test_config_default_values():
     assert Config.CAPTURE_INTERVAL == 2
     assert Config.SSIM_THRESHOLD == 0.95
     assert Config.FACE_AREA_THRESHOLD == 0.25
-    assert Config.TEXT_SIMILARITY_THRESHOLD == 0.8
+    assert Config.TEXT_SIMILARITY_THRESHOLD == 0.9
     assert Config.OUTPUT_DIR == "captured_slides"
     assert Config.MAX_TITLE_LENGTH == 50
     assert Config.OCR_QUEUE_SIZE == 100
