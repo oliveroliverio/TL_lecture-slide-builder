@@ -93,19 +93,20 @@ def test_main_loop_face_detected(slide_capture):
     # Mock dependencies
     with patch.object(ScreenCapture, 'capture_screen', return_value=mock_image) as mock_capture:
         with patch.object(ImageProcessor, 'get_face_area_fraction', return_value=0.3) as mock_face:
-            with patch('generate_slides.time.sleep', side_effect=[None, Exception("Stop loop")]) as mock_sleep:
+            # We need to make the loop run only once, so we'll use a side effect that raises an exception on the second call
+            with patch('generate_slides.time.sleep', side_effect=Exception("Stop loop")) as mock_sleep:
                 # Call the method and catch the exception
                 with pytest.raises(Exception, match="Stop loop"):
                     slide_capture._main_loop()
                 
                 # Check that capture_screen was called
-                mock_capture.assert_called()
+                mock_capture.assert_called_once()
                 
                 # Check that get_face_area_fraction was called
-                mock_face.assert_called_with(mock_image)
+                mock_face.assert_called_once_with(mock_image)
                 
                 # Check that sleep was called with CAPTURE_INTERVAL
-                mock_sleep.assert_called_with(Config.CAPTURE_INTERVAL)
+                mock_sleep.assert_called_once_with(Config.CAPTURE_INTERVAL)
                 
                 # Check that last_image is still None (no slide captured)
                 assert slide_capture.last_image is None
@@ -120,12 +121,13 @@ def test_main_loop_first_slide(slide_capture):
     with patch.object(ScreenCapture, 'capture_screen', return_value=mock_image) as mock_capture:
         with patch.object(ImageProcessor, 'get_face_area_fraction', return_value=0.2) as mock_face:
             with patch.object(slide_capture, '_process_new_slide') as mock_process:
-                with patch('generate_slides.time.sleep', side_effect=[None, Exception("Stop loop")]) as mock_sleep:
+                # We need to make the loop run only once, so we'll use a side effect that raises an exception on the second call
+                with patch('generate_slides.time.sleep', side_effect=Exception("Stop loop")) as mock_sleep:
                     # Call the method and catch the exception
                     with pytest.raises(Exception, match="Stop loop"):
                         slide_capture._main_loop()
                     
-                    # Check that _process_new_slide was called
+                    # Check that _process_new_slide was called once
                     mock_process.assert_called_once_with(mock_image)
 
 
@@ -141,12 +143,13 @@ def test_main_loop_similar_slide(slide_capture):
         with patch.object(ImageProcessor, 'get_face_area_fraction', return_value=0.2) as mock_face:
             with patch.object(ImageProcessor, 'image_similarity', return_value=0.96) as mock_similarity:
                 with patch.object(slide_capture, '_process_new_slide') as mock_process:
-                    with patch('generate_slides.time.sleep', side_effect=[None, Exception("Stop loop")]) as mock_sleep:
+                    # We need to make the loop run only once, so we'll use a side effect that raises an exception on the second call
+                    with patch('generate_slides.time.sleep', side_effect=Exception("Stop loop")) as mock_sleep:
                         # Call the method and catch the exception
                         with pytest.raises(Exception, match="Stop loop"):
                             slide_capture._main_loop()
                         
-                        # Check that image_similarity was called
+                        # Check that image_similarity was called once
                         mock_similarity.assert_called_once_with(mock_image2, mock_image1)
                         
                         # Check that _process_new_slide was NOT called
@@ -165,10 +168,11 @@ def test_main_loop_different_slide(slide_capture):
         with patch.object(ImageProcessor, 'get_face_area_fraction', return_value=0.2) as mock_face:
             with patch.object(ImageProcessor, 'image_similarity', return_value=0.94) as mock_similarity:
                 with patch.object(slide_capture, '_process_new_slide') as mock_process:
-                    with patch('generate_slides.time.sleep', side_effect=[None, Exception("Stop loop")]) as mock_sleep:
+                    # We need to make the loop run only once, so we'll use a side effect that raises an exception on the second call
+                    with patch('generate_slides.time.sleep', side_effect=Exception("Stop loop")) as mock_sleep:
                         # Call the method and catch the exception
                         with pytest.raises(Exception, match="Stop loop"):
                             slide_capture._main_loop()
                         
-                        # Check that _process_new_slide was called
+                        # Check that _process_new_slide was called once
                         mock_process.assert_called_once_with(mock_image2)
