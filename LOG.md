@@ -1,5 +1,8 @@
 # Development Log
 
+## 2504030-2:
+"git checkout fix/capturing-similar-images" and commit empty with message "images captured too similar" need to capture only if the OCR'd text as changed."
+
 ## 2025-04-03: Refactor generate_slides.py for better separation of concerns
 
 ### Changes Made:
