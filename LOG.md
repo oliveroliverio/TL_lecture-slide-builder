@@ -85,3 +85,29 @@
 - Fix issues with mocking external dependencies
 - Align test expectations with actual implementation behavior
 - Improve test reliability by avoiding actual image processing operations
+
+## 2023-08-01: Implemented OCR-based Text Similarity for Slide Detection
+
+### Changes Made
+- Added a new `text_similarity` method to the `ImageProcessor` class that compares OCR'd text from two images using Jaccard similarity (intersection over union of words)
+- Modified the `SlideCapture._main_loop` method to use text similarity instead of image similarity for detecting new slides
+- Added a new `TEXT_SIMILARITY_THRESHOLD` configuration parameter to the `Config` class
+- Updated tests to verify the new text similarity functionality
+
+### Files Modified
+- `generate_slides.py`:
+  - Added `text_similarity` method to `ImageProcessor` class (lines 94-126)
+  - Added `TEXT_SIMILARITY_THRESHOLD` to `Config` class (line 26)
+  - Modified `SlideCapture._main_loop` to use text similarity (lines 326-336)
+- `tests/test_image_processor.py`:
+  - Added tests for the new `text_similarity` method
+- `tests/test_slide_capture.py`:
+  - Updated tests to use text similarity instead of image similarity
+- `tests/test_config.py`:
+  - Added test for the new `TEXT_SIMILARITY_THRESHOLD` configuration parameter
+
+### Reason for Changes
+The previous implementation used structural similarity (SSIM) to compare images, which could result in capturing similar-looking slides even if the text content had changed. By comparing the OCR'd text instead, we can more accurately detect when a slide has new content, even if the visual layout is similar. This approach focuses on the actual information content rather than just the visual appearance.
+
+### Testing
+All tests have been updated and are passing. The application now only captures a new slide when the OCR'd text has changed significantly (based on the Jaccard similarity threshold), rather than relying on visual similarity.

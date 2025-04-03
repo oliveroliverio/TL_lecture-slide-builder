@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import cv2
 from unittest.mock import patch, MagicMock
-from generate_slides import ImageProcessor
+from generate_slides import ImageProcessor, OCRProcessor
 
 
 @pytest.fixture
@@ -104,3 +104,55 @@ def test_image_similarity_different_images():
         
         # Should return the value from SSIM
         assert result == 0.5
+
+
+def test_text_similarity_identical_text():
+    """Test text_similarity with identical text."""
+    # Mock OCRProcessor.extract_text_from_image to return specific text
+    with patch.object(OCRProcessor, 'extract_text_from_image', side_effect=["Sample text", "Sample text"]):
+        img1 = np.zeros((100, 100, 3), dtype=np.uint8)
+        img2 = np.zeros((100, 100, 3), dtype=np.uint8)
+        
+        result = ImageProcessor.text_similarity(img1, img2)
+        
+        # Should return 1.0 for identical text
+        assert result == 1.0
+
+
+def test_text_similarity_different_text():
+    """Test text_similarity with different text."""
+    # Mock OCRProcessor.extract_text_from_image to return different text
+    with patch.object(OCRProcessor, 'extract_text_from_image', side_effect=["Sample text", "Different text"]):
+        img1 = np.zeros((100, 100, 3), dtype=np.uint8)
+        img2 = np.zeros((100, 100, 3), dtype=np.uint8)
+        
+        result = ImageProcessor.text_similarity(img1, img2)
+        
+        # Should return a value less than 1.0 for different text
+        assert result < 1.0
+
+
+def test_text_similarity_empty_text():
+    """Test text_similarity when OCR returns empty text."""
+    # Mock OCRProcessor.extract_text_from_image to return empty text
+    with patch.object(OCRProcessor, 'extract_text_from_image', side_effect=["", ""]):
+        img1 = np.zeros((100, 100, 3), dtype=np.uint8)
+        img2 = np.zeros((100, 100, 3), dtype=np.uint8)
+        
+        result = ImageProcessor.text_similarity(img1, img2)
+        
+        # Should return 1.0 for identical (empty) text
+        assert result == 1.0
+
+
+def test_text_similarity_one_empty_text():
+    """Test text_similarity when one OCR result is empty."""
+    # Mock OCRProcessor.extract_text_from_image to return one empty text
+    with patch.object(OCRProcessor, 'extract_text_from_image', side_effect=["Sample text", ""]):
+        img1 = np.zeros((100, 100, 3), dtype=np.uint8)
+        img2 = np.zeros((100, 100, 3), dtype=np.uint8)
+        
+        result = ImageProcessor.text_similarity(img1, img2)
+        
+        # Should return 0.0 for completely different text (one empty, one not)
+        assert result == 0.0

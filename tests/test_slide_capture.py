@@ -131,8 +131,8 @@ def test_main_loop_first_slide(slide_capture):
                     mock_process.assert_called_once_with(mock_image)
 
 
-def test_main_loop_similar_slide(slide_capture):
-    """Test _main_loop with a similar slide (above threshold)."""
+def test_main_loop_similar_text(slide_capture):
+    """Test _main_loop with similar text."""
     # Set up to run once and then raise an exception to exit the loop
     mock_image1 = np.zeros((100, 100, 3), dtype=np.uint8)
     mock_image2 = np.zeros((100, 100, 3), dtype=np.uint8)
@@ -141,7 +141,7 @@ def test_main_loop_similar_slide(slide_capture):
     # Mock dependencies
     with patch.object(ScreenCapture, 'capture_screen', return_value=mock_image2) as mock_capture:
         with patch.object(ImageProcessor, 'get_face_area_fraction', return_value=0.2) as mock_face:
-            with patch.object(ImageProcessor, 'image_similarity', return_value=0.96) as mock_similarity:
+            with patch.object(ImageProcessor, 'text_similarity', return_value=0.96) as mock_similarity:
                 with patch.object(slide_capture, '_process_new_slide') as mock_process:
                     # We need to make the loop run only once, so we'll use a side effect that raises an exception on the second call
                     with patch('generate_slides.time.sleep', side_effect=Exception("Stop loop")) as mock_sleep:
@@ -149,15 +149,15 @@ def test_main_loop_similar_slide(slide_capture):
                         with pytest.raises(Exception, match="Stop loop"):
                             slide_capture._main_loop()
                         
-                        # Check that image_similarity was called once
+                        # Check that text_similarity was called once
                         mock_similarity.assert_called_once_with(mock_image2, mock_image1)
                         
                         # Check that _process_new_slide was NOT called
                         mock_process.assert_not_called()
 
 
-def test_main_loop_different_slide(slide_capture):
-    """Test _main_loop with a different slide (below threshold)."""
+def test_main_loop_different_text(slide_capture):
+    """Test _main_loop with different text."""
     # Set up to run once and then raise an exception to exit the loop
     mock_image1 = np.zeros((100, 100, 3), dtype=np.uint8)
     mock_image2 = np.ones((100, 100, 3), dtype=np.uint8)
@@ -166,7 +166,7 @@ def test_main_loop_different_slide(slide_capture):
     # Mock dependencies
     with patch.object(ScreenCapture, 'capture_screen', return_value=mock_image2) as mock_capture:
         with patch.object(ImageProcessor, 'get_face_area_fraction', return_value=0.2) as mock_face:
-            with patch.object(ImageProcessor, 'image_similarity', return_value=0.94) as mock_similarity:
+            with patch.object(ImageProcessor, 'text_similarity', return_value=0.7) as mock_similarity:
                 with patch.object(slide_capture, '_process_new_slide') as mock_process:
                     # We need to make the loop run only once, so we'll use a side effect that raises an exception on the second call
                     with patch('generate_slides.time.sleep', side_effect=Exception("Stop loop")) as mock_sleep:

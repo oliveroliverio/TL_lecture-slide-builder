@@ -23,6 +23,7 @@ class Config:
     CAPTURE_INTERVAL = 2  # seconds between checks
     SSIM_THRESHOLD = 0.95  # lower = more sensitive to change
     FACE_AREA_THRESHOLD = 0.25  # proportion of screen covered by faces
+    TEXT_SIMILARITY_THRESHOLD = 0.8  # text similarity threshold (0-1)
     OUTPUT_DIR = "captured_slides"
     MAX_TITLE_LENGTH = 50  # maximum length of generated title
     OCR_QUEUE_SIZE = 100  # maximum number of images to queue for OCR processing
@@ -91,6 +92,37 @@ class ImageProcessor:
 
         score, _ = ssim(gray1, gray2, full=True)
         return score
+    
+    @staticmethod
+    def text_similarity(img1, img2):
+        """Calculate the similarity between OCR text from two images."""
+        try:
+            # Extract text from both images
+            text1 = OCRProcessor.extract_text_from_image(img1)
+            text2 = OCRProcessor.extract_text_from_image(img2)
+            
+            # If both texts are empty, consider them identical
+            if not text1 and not text2:
+                return 1.0
+            
+            # If only one text is empty, they are completely different
+            if not text1 or not text2:
+                return 0.0
+            
+            # Calculate Jaccard similarity (intersection over union of words)
+            words1 = set(text1.lower().split())
+            words2 = set(text2.lower().split())
+            
+            intersection = len(words1.intersection(words2))
+            union = len(words1.union(words2))
+            
+            if union == 0:  # Safeguard against division by zero
+                return 1.0
+                
+            return intersection / union
+        except Exception as e:
+            print(f"❌ Text similarity error: {e}")
+            return 0
 
 
 # === File Management Module ===
@@ -295,11 +327,14 @@ class SlideCapture:
                 if self.last_image is None:
                     self._process_new_slide(current_image)
                 else:
-                    similarity = ImageProcessor.image_similarity(current_image, self.last_image)
-                    if similarity < Config.SSIM_THRESHOLD:
+                    # Use text similarity instead of image similarity
+                    text_similarity = ImageProcessor.text_similarity(current_image, self.last_image)
+                    
+                    if text_similarity < Config.TEXT_SIMILARITY_THRESHOLD:
+                        print(f"📝 New slide detected: text similarity is {text_similarity:.2f}")
                         self._process_new_slide(current_image)
                     else:
-                        print(f"📋 Skipped: slides are {similarity:.2f} similar")
+                        print(f"📋 Skipped: text similarity is {text_similarity:.2f}")
 
             time.sleep(Config.CAPTURE_INTERVAL)
     
